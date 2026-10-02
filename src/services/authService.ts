@@ -3,7 +3,9 @@ import { memberService } from './memberService';
 
 async function request<T>(path: string, body?: object): Promise<T> {
   const response = await fetch(`/api/auth/${path}`, { credentials: 'same-origin', signal: AbortSignal.timeout(15000), ...(body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}) });
-  const data = await response.json();
+  let data;
+  try { data = await response.json(); }
+  catch { throw new Error('Sign-in is temporarily unavailable. Please try again later.'); }
   if (!response.ok) throw new Error(data.message || 'Sign-in is unavailable. Please try again.');
   return data;
 }

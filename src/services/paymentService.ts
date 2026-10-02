@@ -18,7 +18,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   catch { throw new Error('The payment service could not be reached. Reload payment history before trying another request.'); }
   let data;
   try { data = await response.json(); }
-  catch { throw new Error('The payment service is unavailable. Start the app with npm run dev.'); }
+  catch { throw new Error('The payment service is temporarily unavailable. Please try again later.'); }
   if (response.status === 401) window.location.replace(`/login?returnTo=${encodeURIComponent(window.location.pathname)}`);
   if (!response.ok) throw new Error(data.message || 'The payment request could not be completed.');
   return data as T;
