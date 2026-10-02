@@ -1,0 +1,8 @@
+import { ArrowUpRight, ShieldCheck } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import type { Member, Membership } from '../types';
+import { formatDate } from '../services/memberService';
+import { StatusBadge } from './StatusBadge';
+export function MembershipCard({ member, membership }: { member: Member; membership: Membership }) {
+  return <section className="panel overflow-hidden"><div className="section-heading"><h2>Membership details</h2><ShieldCheck size={20} className="text-muted" /></div><div className="membership-body"><div className="member-pass"><div className="flex items-center justify-between"><span className="font-bold tracking-wider">BNAK<span className="brand-dot">.</span></span><ShieldCheck size={25} /></div><p className="mt-8 text-xs text-white/70">BUSINESS MEMBER</p><p className="mt-2 text-xl font-semibold">{member.firstName} {member.lastName}</p><div className="mt-6 flex items-end justify-between gap-2"><span className="font-mono text-sm">{member.membershipNumber}</span><span className="text-[10px] text-white/70">GROWING TOGETHER</span></div></div><dl className="detail-list">{[['Membership number', member.membershipNumber], ['Membership plan', membership.plan], ['Status', <StatusBadge key="status" status={membership.status} />], ['Joined', formatDate(membership.joinedAt)], ['Valid until', formatDate(membership.validUntil)]].map(([label, value]) => <div key={String(label)}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></div><div className="panel-footer"><span className="text-xs text-muted">Your connection to a stronger business community.</span><Link to="/dashboard/membership" className="text-link">Manage membership <ArrowUpRight size={15} /></Link></div></section>;
+}
