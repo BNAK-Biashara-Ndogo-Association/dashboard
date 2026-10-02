@@ -56,3 +56,4 @@ The server verifies the ID token's signature, audience, issuer and expiry using 
 
 Any Google account can authenticate; signing in does **not** establish association membership. Names and email come from Google, while membership, events and sample payment history remain clearly labeled demo data. Live Google sign-in requires your client ID, registered origins and a browser test; automated tests use a stubbed token verifier and do not contact Google or Safaricom.
 # dashboard
+# dashboard
