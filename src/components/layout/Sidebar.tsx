@@ -2,6 +2,7 @@ import { BookOpen, CalendarDays, CreditCard, LayoutDashboard, LogOut, ShieldChec
 import { NavLink } from 'react-router-dom';
 export const navigation = [
   { path: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { path: '/dashboard/registration', label: 'Registration & KYC', icon: ShieldCheck },
   { path: '/dashboard/profile', label: 'My Profile', icon: UserRound },
   { path: '/dashboard/membership', label: 'Membership', icon: ShieldCheck },
   { path: '/dashboard/payments', label: 'Payments', icon: CreditCard },

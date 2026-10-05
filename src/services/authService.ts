@@ -13,5 +13,9 @@ export const authService = {
   config: () => request<{ clientId: string; nonce: string }>('config'),
   async session() { const { user } = await request<{ user: User | null }>('session'); memberService.setUser(user); return user; },
   async login(credential: string) { const { user } = await request<{ user: User }>('google', { credential }); memberService.setUser(user); return user; },
+  async passwordLogin(email: string, password: string) { const { user } = await request<{ user: User }>('login', { email, password }); memberService.setUser(user); return user; },
+  async signup(body: { email: string; password: string; firstName: string; lastName: string }) { const { user } = await request<{ user: User }>('signup', body); memberService.setUser(user); return user; },
+  forgotPassword: (email: string) => request<{ message: string }>('forgot-password', { email }),
+  resetPassword: (token: string, password: string) => request<{ message: string }>('reset-password', { token, password }),
   async logout() { await request('logout', {}); memberService.setUser(null); },
 };
