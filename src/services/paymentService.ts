@@ -4,13 +4,14 @@ export interface DarajaPayment extends Payment {
   createdAt: string;
   message: string;
   canCheck: boolean;
-  environment: 'sandbox';
+  environment: 'sandbox' | 'production';
+  receipt?: string;
 }
 export interface PaymentConfig {
   ready: boolean;
-  environment: 'sandbox';
+  environment: 'sandbox' | 'production';
   message: string;
-  product: { id: string; description: string; amount: number; currency: 'KES'; memberNumber: string };
+  product: { id: string; description: string; amount: number; currency: 'KES'; memberNumber: string } | null;
 }
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;

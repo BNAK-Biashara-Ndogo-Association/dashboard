@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, redirect } from 'react-router-dom';
+import { memberService } from '../services/memberService';
 import { authService } from '../services/authService';
 import { LoginPage } from '../pages/LoginPage';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
@@ -6,12 +7,15 @@ import { OverviewPage } from '../pages/OverviewPage';
 import { EventDetailsPage, EventsPage, MembershipPage, NotFoundPage, ProfilePage, ResourcesPage } from '../pages/MemberPages';
 import { PaymentsPage } from '../pages/PaymentsPage';
 import { RegistrationPage } from '../pages/RegistrationPage';
+
+
 export const router = createBrowserRouter([
   { path: '/', element: <Navigate to="/dashboard" replace /> },
   { path: '/dashboard', loader: async ({ request }) => {
     let user;
     try { user = await authService.session(); } catch { user = null; }
     if (!user) { const url = new URL(request.url); return redirect(`/login?returnTo=${encodeURIComponent(url.pathname + url.search)}`); }
+    await memberService.refresh();
     return null;
   }, shouldRevalidate: () => true, element: <DashboardLayout />, children: [
     { index: true, element: <OverviewPage /> }, { path: 'registration', element: <RegistrationPage /> }, { path: 'profile', element: <ProfilePage /> },

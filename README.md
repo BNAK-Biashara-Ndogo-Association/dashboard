@@ -20,4 +20,10 @@ Vite runs on port 5173 and proxies `/api` to the backend on port 3001. `npm run 
 
 Backend credentials belong in `../backend/.env` or the backend host environment. The dashboard needs no Google or Daraja secrets.
 
-Google login is required, but membership, events, resources and sample payment records remain demo data. Live membership and production payment processing still require implementation.
+Members sign in with passwords or configured Google sign-in. Membership and payment history come from the backend; events currently show an empty state. Follow the backend live payment deployment guide before collecting payments.
+
+The standalone admin frontend lives in [`../admin_dashboard`](../admin_dashboard/README.md).
+
+## Authentication tests
+
+Run `npm test` to check the frontend auth service and protected route loader: password and Google request handling, rejected credentials, malformed responses, anonymous session redirects, and signed-in access. These tests mock network responses and load the actual TypeScript services and routes; they do not drive a browser or perform a real Google OAuth exchange. The backend's `server/dashboard-auth.test.mjs` exercises real password hashing, session cookies, member registration, admin permissions, assisted registration, payment recording, activation, logout and expiry in an isolated database.

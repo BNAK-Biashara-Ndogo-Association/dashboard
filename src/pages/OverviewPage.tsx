@@ -4,13 +4,14 @@ import { StatCard } from '../components/StatCard';
 import { MembershipCard } from '../components/MembershipCard';
 import { EventCard } from '../components/EventCard';
 import { PaymentList } from '../components/PaymentList';
-import { memberService } from '../services/memberService';
+import { memberService, formatDate } from '../services/memberService';
 export function OverviewPage() {
   const member = memberService.getMember();
+  const membership = memberService.getMembership();
   return <>
     <div className="page-intro"><div><p className="eyebrow mb-2">YOUR MEMBER DASHBOARD</p><h2>Welcome back, {member.firstName}<span className="text-brand">.</span></h2><p>Here’s a snapshot of your membership and what’s coming up.</p></div><span className="member-number"><ShieldCheck size={15} />{member.membershipNumber}</span></div>
     <section className="registration-prompt"><span className="icon-tile"><ShieldCheck size={21} /></span><div><h2>Member registration & KYC</h2><p>Submit your business details, verify your identity and activate your membership.</p></div><Link to="/dashboard/registration" className="primary-button">Open registration <ArrowRight size={15} /></Link></section>
-    <div className="grid gap-5 md:grid-cols-3"><StatCard label="Membership status" value="Active" note="You’re part of the BNAK community" icon={ShieldCheck} /><StatCard label="Renewal date" value="12 May 2027" note="Your next annual membership renewal" icon={CalendarDays} /><StatCard label="Upcoming events" value="2" note="More opportunities to connect and grow" icon={UsersRound} /></div>
+    <div className="grid gap-5 md:grid-cols-3"><StatCard label="Membership status" value={membership.status.charAt(0).toUpperCase() + membership.status.slice(1)} note="You’re part of the BNAK community" icon={ShieldCheck} /><StatCard label="Renewal date" value={formatDate(membership.validUntil)} note="Your next annual membership renewal" icon={CalendarDays} /><StatCard label="Upcoming events" value={String(memberService.getEvents().length)} note="More opportunities to connect and grow" icon={UsersRound} /></div>
     <div className="overview-grid"><MembershipCard member={member} membership={memberService.getMembership()} /><section className="panel"><div className="section-heading"><h2>Upcoming events</h2><Link to="/dashboard/events" className="text-link text-xs">View all <ArrowRight size={14} /></Link></div><div className="px-5">{memberService.getEvents().map(event => <EventCard key={event.id} event={event} />)}</div></section></div>
     <section className="panel"><div className="section-heading"><div><h2>Recent payments</h2><p className="mt-1 text-xs text-muted">A record of your membership contributions.</p></div><Link to="/dashboard/payments" className="text-link text-xs">View history <ArrowRight size={14} /></Link></div><PaymentList payments={memberService.getPayments()} /></section>
     <div className="community-banner"><span className="icon-tile"><UsersRound size={22} /></span><div><h3 className="text-sm font-semibold">Your membership makes a difference.</h3><p className="mt-1 text-xs text-muted">Together, we’re building a stronger voice for small businesses across Kenya.</p></div><Link to="/dashboard/resources" className="text-link text-xs">Explore member resources <ArrowRight size={15} /></Link></div>

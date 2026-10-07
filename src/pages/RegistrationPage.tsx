@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Check, Clock3, FileCheck2, LoaderCircle, RefreshCw, ShieldCheck, Smartphone, Upload } from 'lucide-react';
+import { Link, useOutletContext } from 'react-router-dom';
+import { Check, Clock3, FileCheck2, LoaderCircle, ShieldCheck, Upload } from 'lucide-react';
 import { memberService } from '../services/memberService';
 import { membershipService } from '../services/membershipService';
-import { paymentService } from '../services/paymentService';
 import type { KycRegistration, MembershipConfig } from '../types';
-import type { DarajaPayment, PaymentConfig } from '../services/paymentService';
 
 const declaration = 'I confirm that the information provided is accurate and consent to Biashara Ndogo Association of Kenya (BNAK) collecting and processing my information for membership administration, KYC verification, communication, business support, programmes, research, advocacy and other legitimate organizational purposes in accordance with applicable data protection requirements.';
 const fileLimit = 5 * 1024 * 1024;
@@ -38,73 +37,29 @@ function Section({ number, title, children }: { number: string; title: string; c
 }
 
 export function RegistrationPage() {
+  const { onRegistrationSaved } = useOutletContext<{ onRegistrationSaved: () => void }>();
   const [config, setConfig] = useState<MembershipConfig | null>(null);
-  const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null);
   const [registration, setRegistration] = useState<KycRegistration | null>(null);
-  const [payment, setPayment] = useState<DarajaPayment | null>(null);
   const [selectedPackageId, setSelectedPackageId] = useState('');
   const [selectedLocationType, setSelectedLocationType] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
-  const requestKey = useRef<string | null>(null);
-  const pollState = useRef({ id: '', attempts: 0 });
 
   useEffect(() => {
     let current = true;
     Promise.all([membershipService.config(), membershipService.registration()]).then(([nextConfig, nextRegistration]) => {
-      if (current) { setConfig(nextConfig); setRegistration(nextRegistration); }
+      if (current) {
+        setConfig(nextConfig);
+        setRegistration(nextRegistration);
+        if (nextRegistration) onRegistrationSaved();
+      }
     }).catch(reason => { if (current) setError(reason instanceof Error ? reason.message : 'Could not load registration.'); })
       .finally(() => { if (current) setLoading(false); });
-    paymentService.config().then(value => { if (current) setPaymentConfig(value); }).catch(reason => { if (current) setNotice(reason instanceof Error ? reason.message : 'M-PESA is temporarily unavailable.'); });
-    paymentService.list().then(history => { if (current && history[0]) setPayment(history[0]); }).catch(() => { /* Registration remains available if payment history is offline. */ });
     return () => { current = false; };
-  }, []);
-
-  const checkPayment = useCallback(async (id: string) => {
-    setChecking(true);
-    try {
-      setPayment(await paymentService.refresh(id));
-      const latest = await membershipService.registration();
-      setRegistration(latest);
-      setError('');
-    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Could not verify the payment.'); }
-    finally { setChecking(false); }
-  }, []);
-
-  useEffect(() => {
-    if (!paymentConfig?.ready || !payment?.canCheck || payment.status !== 'pending') return;
-    if (pollState.current.id !== payment.id) pollState.current = { id: payment.id, attempts: 0 };
-    if (pollState.current.attempts >= 8) return;
-    const timer = window.setTimeout(() => {
-      pollState.current.attempts++;
-      void checkPayment(payment.id);
-    }, 15000);
-    return () => window.clearTimeout(timer);
-  }, [payment?.id, payment?.canCheck, payment?.status, paymentConfig?.ready, checking, checkPayment]);
-
-  async function beginPayment(record: KycRegistration, phone: string) {
-    if (!paymentConfig?.ready) { setNotice(paymentConfig?.message || 'Your registration is saved. M-PESA payment is not available yet.'); setBusy(false); return; }
-    setBusy(true); setError(''); setNotice('');
-    requestKey.current ??= crypto.randomUUID();
-    try {
-      const nextPayment = await paymentService.initiate(phone, record.packageId, requestKey.current);
-      requestKey.current = null;
-      setPayment(nextPayment);
-      setRegistration(await membershipService.registration());
-      setNotice('Your registration is submitted. Follow the M-PESA prompt on your phone.');
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Could not send the M-PESA prompt.');
-      try {
-        const [latest, history] = await Promise.all([membershipService.registration(), paymentService.list()]);
-        setRegistration(latest);
-        if (history[0]) setPayment(history[0]);
-      } catch { /* Keep the original payment error visible. */ }
-    } finally { setBusy(false); }
-  }
+  }, [onRegistrationSaved]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -118,28 +73,22 @@ export function RegistrationPage() {
       if (front.size > fileLimit || back.size > fileLimit) throw new Error('Each ID file must be 5 MB or smaller.');
       const values = new FormData(form);
       const value = (name: string) => String(values.get(name) ?? '');
-      const normalizedPaymentPhone = value('paymentMobileNumber').replace(/[\s()-]/g, '').replace(/^\+/, '');
-      if (!/^(?:0|254)[17]\d{8}$/.test(normalizedPaymentPhone)) throw new Error('Enter a Kenyan M-PESA number such as 0712345678 or +254712345678.');
       const nextRegistration = await membershipService.submit({
         fullName: value('fullName'), idNumber: value('idNumber'), gender: value('gender'), ageGroup: value('ageGroup'),
         mobileNumber: value('mobileNumber'), county: value('county'), constituency: value('constituency'), ward: value('ward'),
         businessArea: value('businessArea'), locationType: value('locationType'), otherLocationType: value('otherLocationType'),
         locationName: value('locationName'), businessName: value('businessName'), sector: value('sector'),
         registrationStatus: value('registrationStatus'), employees: value('employees'), turnover: value('turnover'),
-        packageId: value('packageId'), paymentMobileNumber: value('paymentMobileNumber'), consent: values.get('consent') === 'on',
+        packageId: value('packageId'), consent: values.get('consent') === 'on',
         idFront: await filePayload(front), idBack: await filePayload(back),
       });
       setRegistration(nextRegistration);
-      await beginPayment(nextRegistration, nextRegistration.paymentMobileNumber);
+      onRegistrationSaved();
+      setNotice('Your KYC details are saved. Continue to Payments in the sidebar to pay your membership fee.');
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Could not submit your registration.');
       setBusy(false);
     }
-  }
-
-  async function paySavedRegistration() {
-    if (!registration) return;
-    await beginPayment(registration, registration.paymentMobileNumber);
   }
 
   const selectedPackage = config?.packages.find(item => item.id === registration?.packageId);
@@ -164,8 +113,8 @@ export function RegistrationPage() {
           <div><dt>Verification date</dt><dd>{registration.verifiedAt || 'Pending review'}</dd></div>
         </dl>
         {registration.membershipStatus !== 'active' && <div className="registration-payment">
-          <div><div className="flex items-center gap-2 font-semibold"><Smartphone size={17} />M-PESA STK Push</div><p className="mt-1 text-xs leading-5 text-muted">An STK prompt is sent to {registration.paymentMobileNumber}. Enter your PIN on your phone only.</p></div>
-          {registration.paymentReference && registration.paymentStatus === 'pending' ? <button type="button" className="secondary-button" onClick={() => payment?.canCheck && void checkPayment(payment.id)} disabled={!payment?.canCheck || checking}>{checking ? <LoaderCircle size={16} className="animate-spin" /> : <RefreshCw size={15} />}{checking ? 'Checking…' : 'Check payment'}</button> : <button type="button" className="primary-button" onClick={() => void paySavedRegistration()} disabled={busy || !paymentConfig?.ready}>{busy ? <LoaderCircle size={16} className="animate-spin" /> : <Smartphone size={16} />}{busy ? 'Sending…' : registration.paymentStatus === 'failed' ? 'Try payment again' : 'Send M-PESA prompt'}</button>}
+          <p className="text-sm text-muted">Your KYC details are saved. Continue to Payments to complete or check your membership payment.</p>
+          <Link className="primary-button" to="/dashboard/payments">Continue to payments</Link>
         </div>}
       </section>
       <p className="kyc-privacy"><ShieldCheck size={16} />Identity documents are stored encrypted and are not included in your member dashboard response.</p>
@@ -200,17 +149,11 @@ export function RegistrationPage() {
       <Section number="05" title="Membership package">
         <Field label="Select membership package *"><select className="kyc-input" name="packageId" value={selectedPackageId} onChange={event => setSelectedPackageId(event.target.value)} required><option value="" disabled>Select package</option>{config.packages.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></Field>
         <Field label="Membership fee"><output className="kyc-fee">{config.packages.find(item => item.id === selectedPackageId) ? formatKsh(config.packages.find(item => item.id === selectedPackageId)!.amount) : 'Select a package to see its fee'}</output></Field>
-        <Field label="Payment mobile number *"><input className="kyc-input" name="paymentMobileNumber" type="tel" inputMode="tel" autoComplete="tel" placeholder="0712 345 678" maxLength={24} required /></Field>
-        <p className="kyc-field-note">Your selected package and applicable fee will be displayed before payment.</p>
       </Section>
-      <Section number="06" title="Payment">
-        <div className="kyc-payment-method"><span className="icon-tile"><Smartphone size={20} /></span><div><strong>M-PESA STK Push</strong><p>{paymentConfig?.ready ? 'A payment prompt will be sent after you submit the registration.' : paymentConfig?.message || 'Payment service status is loading.'}</p></div></div>
-        <p className="kyc-field-note">After submitting, approve the prompt on your phone. Payment is verified automatically; your membership ID is generated after successful confirmation.</p>
-      </Section>
-      <Section number="07" title="Declaration & consent">
+      <Section number="06" title="Declaration & consent">
         <label className="kyc-consent"><input type="checkbox" name="consent" required /><span>{declaration}</span></label>
       </Section>
-      <div className="kyc-submit"><span><ShieldCheck size={16} />Your identity documents are encrypted at rest.</span><button className="primary-button" type="submit" disabled={busy}>{busy ? <><LoaderCircle size={17} className="animate-spin" />Submitting…</> : <><FileCheck2 size={17} />Submit registration</>}</button></div>
+      <div className="kyc-submit"><span><ShieldCheck size={16} />Your identity documents are encrypted at rest.</span><button className="primary-button" type="submit" disabled={busy}>{busy ? <><LoaderCircle size={17} className="animate-spin" />Saving…</> : <><FileCheck2 size={17} />Save KYC details</>}</button></div>
     </form>}
   </>;
 }

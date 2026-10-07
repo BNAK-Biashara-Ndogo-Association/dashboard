@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ShieldCheck } from 'lucide-react';
 import { authService } from '../services/authService';
 
 declare global {
@@ -87,7 +86,7 @@ export function LoginPage({ mode = 'login' }: { mode?: Mode }) {
   const title = { login: 'Welcome back', signup: 'Create your account', forgot: 'Forgot your password?', reset: 'Choose a new password' }[mode];
   const description = { login: 'Sign in to your BNAK member portal.', signup: 'Create an account to access the member portal.', forgot: 'Enter your email and we will send you a reset link. If you use Google, continue with Google instead.', reset: 'Use a strong password you have not used elsewhere.' }[mode];
   return <main className="grid min-h-screen place-items-center p-6"><section className="panel w-full max-w-md p-8">
-    <div className="text-center"><span className="brand-symbol inline-flex items-center justify-center"><ShieldCheck size={28} /></span><p className="eyebrow mt-6">BNAK MEMBER PORTAL</p><h1 className="mt-4 text-2xl font-semibold">{title}</h1><p className="my-5 text-sm leading-6 text-muted">{description}</p></div>
+    <div className="text-center"><img src="/bnak-logo.svg" alt="Biashara Ndogo Association of Kenya" className="mx-auto block h-auto w-52" width="1040" height="340" /><p className="eyebrow mt-6">BNAK MEMBER PORTAL</p><h1 className="mt-4 text-2xl font-semibold">{title}</h1><p className="my-5 text-sm leading-6 text-muted">{description}</p></div>
     {mode === 'reset' && !resetToken ? <p role="alert">This reset link is missing or invalid. <Link className="underline" to="/forgot-password">Request a new link</Link>.</p> : !resetDone && <form onSubmit={submit} className="space-y-4">
       <fieldset disabled={busy} className="space-y-4">
         {mode === 'signup' && <div className="grid grid-cols-2 gap-3"><label className="text-sm font-medium">First name<input className="payment-input" name="firstName" autoComplete="given-name" required maxLength={80} /></label><label className="text-sm font-medium">Last name<input className="payment-input" name="lastName" autoComplete="family-name" maxLength={80} /></label></div>}
