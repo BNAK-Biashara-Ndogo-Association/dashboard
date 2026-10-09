@@ -7,6 +7,8 @@ button, a { transition: background-color .15s, color .15s; }
 :focus-visible { outline: 3px solid #b39a52; outline-offset: 4px; }
 .sidebar { width: 248px; background: #fff; border-right: 1px solid var(--color-border); padding: 32px 22px 0; display: flex; flex-direction: column; }
 .sidebar-desktop { position: fixed; inset: 0 auto 0 0; z-index: 30; overflow-y: auto; }
+.sidebar-desktop, .mobile-drawer { scrollbar-width: none; -ms-overflow-style: none; }
+.sidebar-desktop::-webkit-scrollbar, .mobile-drawer::-webkit-scrollbar { display: none; }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand-symbol { background: var(--color-brand); color: white; border-radius: 11px; padding: 10px; }
 .brand strong { font-size: 29px; line-height: 1; letter-spacing: -.8px; }
