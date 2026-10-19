@@ -73,7 +73,10 @@ export function LoginPage({ mode = 'login' }: { mode?: Mode }) {
     if ((mode === 'signup' || mode === 'reset') && password !== fields.get('confirmPassword')) { setError('Passwords do not match.'); return; }
     setBusy(true);
     try {
-      if (mode === 'forgot') { setMessage((await authService.forgotPassword(email)).message); }
+      if (mode === 'forgot') {
+        await authService.forgotPassword(email);
+        setMessage('If an email-and-password account exists for that address, a reset link has been sent. Check your inbox and spam folder.');
+      }
       else if (mode === 'reset') { setMessage((await authService.resetPassword(resetToken, password)).message); setResetDone(true); }
       else {
         if (mode === 'signup') {
@@ -102,7 +105,7 @@ export function LoginPage({ mode = 'login' }: { mode?: Mode }) {
       </fieldset>
     </form>}
     {error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
-    {message && <p role="status" className="mt-4 text-sm">{message}</p>}
+    {message && <p role="status" className={`mt-4 rounded-lg border px-4 py-3 text-sm ${mode === 'forgot' ? 'border-blue-200 bg-blue-50 text-blue-900' : 'border-slate-200 bg-slate-50 text-slate-700'}`}>{message}</p>}
     {(mode === 'login' || mode === 'signup') && <><div className="my-5 text-center text-xs text-muted">OR CONTINUE WITH GOOGLE</div><div ref={button} className="flex justify-center" />{googleError && <p className="mt-3 text-center text-sm text-muted">{googleError} <button type="button" className="underline" onClick={() => setAttempt(value => value + 1)}>Retry Google</button></p>}</>}
     <p className="mt-6 text-center text-sm">{mode === 'login' ? <>New here? <Link className="font-semibold underline" to={withReturn('/signup')}>Create an account</Link></> : <Link className="font-semibold underline" to={withReturn('/login')}>Back to sign in</Link>}</p>
   </section></main>;
