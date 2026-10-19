@@ -1,4 +1,5 @@
 import type { Payment } from '../types';
+import { apiFetch } from './api';
 
 export interface DarajaPayment extends Payment {
   createdAt: string;
@@ -15,7 +16,7 @@ export interface PaymentConfig {
 }
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
-  try { response = await fetch(`/api/mpesa${path}`, { ...init, signal: AbortSignal.timeout(45000) }); }
+  try { response = await apiFetch(`/api/mpesa${path}`, { ...init, signal: AbortSignal.timeout(45000) }); }
   catch { throw new Error('The payment service could not be reached. Reload payment history before trying another request.'); }
   let data;
   try { data = await response.json(); }

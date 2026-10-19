@@ -1,8 +1,9 @@
 import type { User } from '../types';
 import { memberService } from './memberService';
+import { apiFetch } from './api';
 
 async function request<T>(path: string, body?: object): Promise<T> {
-  const response = await fetch(`/api/auth/${path}`, { credentials: 'same-origin', signal: AbortSignal.timeout(15000), ...(body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}) });
+  const response = await apiFetch(`/api/auth/${path}`, { signal: AbortSignal.timeout(15000), ...(body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}) });
   let data;
   try { data = await response.json(); }
   catch { throw new Error('Sign-in is temporarily unavailable. Please try again later.'); }

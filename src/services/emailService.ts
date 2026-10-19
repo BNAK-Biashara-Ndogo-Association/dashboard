@@ -1,6 +1,8 @@
+import { apiFetch } from './api';
+
 async function request<T>(path: string, body?: object): Promise<T> {
-  const response = await fetch(`/api/member/email/${path}`, {
-    credentials: 'same-origin', signal: AbortSignal.timeout(30000),
+  const response = await apiFetch(`/api/member/email/${path}`, {
+    signal: AbortSignal.timeout(30000),
     ...(body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}),
   });
   const data = await response.json();

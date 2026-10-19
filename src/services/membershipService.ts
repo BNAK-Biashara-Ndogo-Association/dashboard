@@ -1,8 +1,9 @@
 import type { KycRegistration, MembershipConfig } from '../types';
+import { apiFetch } from './api';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
-  try { response = await fetch(`/api/membership${path}`, { credentials: 'same-origin', signal: AbortSignal.timeout(45000), ...init }); }
+  try { response = await apiFetch(`/api/membership${path}`, { signal: AbortSignal.timeout(45000), ...init }); }
   catch { throw new Error('The membership service could not be reached. Please try again.'); }
   let data;
   try { data = await response.json(); }

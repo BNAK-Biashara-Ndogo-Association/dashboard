@@ -1,4 +1,5 @@
 import type { Event, Member, Membership, Payment, User } from '../types';
+import { apiFetch } from './api';
 
 let signedInUser: User | null = null;
 let profile: Member | null = null;
@@ -11,7 +12,7 @@ export const memberService = {
     signedInUser = user;
   },
   async refresh() {
-    const response = await fetch('/api/member/summary', { credentials: 'same-origin', signal: AbortSignal.timeout(15000) });
+    const response = await apiFetch('/api/member/summary', { signal: AbortSignal.timeout(15000) });
     const data = await response.json();
     if (!response.ok || !data.member || !data.membership) throw new Error(data.message || 'Member details are unavailable.');
     profile = data.member; membership = data.membership; payments = data.payments || []; events = data.events || [];
