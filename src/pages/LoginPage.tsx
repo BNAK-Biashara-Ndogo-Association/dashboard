@@ -27,7 +27,7 @@ export function LoginPage({ mode = 'login' }: { mode?: Mode }) {
   const button = useRef<HTMLDivElement>(null);
   const [error, setError] = useState('');
   const [googleError, setGoogleError] = useState('');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(() => mode === 'login' && new URLSearchParams(window.location.search).get('registered') === '1' ? 'Your account has been created. Sign in to continue.' : '');
   const [busy, setBusy] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [resetDone, setResetDone] = useState(false);
@@ -76,8 +76,12 @@ export function LoginPage({ mode = 'login' }: { mode?: Mode }) {
       if (mode === 'forgot') { setMessage((await authService.forgotPassword(email)).message); }
       else if (mode === 'reset') { setMessage((await authService.resetPassword(resetToken, password)).message); setResetDone(true); }
       else {
-        if (mode === 'signup') await authService.signup({ email, password, firstName: String(fields.get('firstName') || ''), lastName: String(fields.get('lastName') || '') });
-        else await authService.passwordLogin(email, password);
+        if (mode === 'signup') {
+          await authService.signup({ email, password, firstName: String(fields.get('firstName') || ''), lastName: String(fields.get('lastName') || '') });
+          navigate(`${withReturn('/login')}&registered=1`, { replace: true });
+          return;
+        }
+        await authService.passwordLogin(email, password);
         navigate(returnTo, { replace: true });
       }
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Please try again later.'); }
