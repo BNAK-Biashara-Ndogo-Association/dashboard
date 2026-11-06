@@ -40,7 +40,14 @@ export function PaymentsPage() {
   useEffect(() => { void load(); }, [load]);
   const check = useCallback(async (id: string) => {
     setChecking(true);
-    try { updatePayment(await paymentService.refresh(id)); setError(''); }
+    try {
+      const payment = await paymentService.refresh(id);
+      updatePayment(payment); setError('');
+      if (payment.status === 'paid') {
+        const [nextConfig, nextRegistration] = await Promise.all([paymentService.config(), membershipService.registration()]);
+        setConfig(nextConfig); setRegistration(nextRegistration);
+      }
+    }
     catch (reason) { setError(reason instanceof Error ? reason.message : 'Could not check the payment.'); }
     finally { setChecking(false); }
   }, [updatePayment]);
@@ -95,7 +102,7 @@ export function PaymentsPage() {
         {error && <div role="alert" className="payment-error mt-4">{error}</div>}
         <button className="text-link mt-5" onClick={() => void load()} disabled={loading || busy}><RefreshCw size={14} />Reload payment history</button>
       </section>
-      <section className="panel p-6 sm:p-8" aria-live="polite"><h2 className="font-semibold">Payment status</h2>{latest ? <><div className="mt-5 flex items-center gap-2"><StatusBadge status={latest.status} />{latest.status === 'paid' && <CheckCircle2 size={18} className="text-brand" />}</div><p className="mt-4 text-sm leading-7">{latest.message}</p><p className="mt-4 break-all text-xs text-muted">Reference: {latest.id}</p>{latest.receipt && <p className="mt-2 text-xs text-muted">M-PESA receipt: {latest.receipt}</p>}{latest.status === 'pending' && <><p className="mt-4 text-xs leading-6 text-muted">A sent prompt is not a completed payment. We check with M-PESA every 15 seconds for up to two minutes. You can check again below if it takes longer.</p><button className="primary-button mt-5 gap-2" disabled={!latest.canCheck || checking || !config?.ready} onClick={() => void check(latest.id)}><RefreshCw size={15} />{checking ? 'Checking…' : 'Check payment status'}</button></>}</> : <p className="mt-4 text-sm leading-7 text-muted">Send a payment request to get started. The result will appear here after confirmation from M-PESA.</p>}</section>
+      <section className="panel p-6 sm:p-8" aria-live="polite"><h2 className="font-semibold">Payment status</h2>{latest ? <><div className="mt-5 flex items-center gap-2"><StatusBadge status={latest.status} />{latest.status === 'paid' && <CheckCircle2 size={18} className="text-brand" />}</div><p className="mt-4 text-sm leading-7">{latest.message}</p><p className="mt-4 break-all text-xs text-muted">Reference: {latest.id}</p>{latest.receipt && <p className="mt-2 text-xs text-muted">M-PESA receipt: {latest.receipt}</p>}{(latest.status === 'pending' || latest.status === 'failed') && <><p className="mt-4 text-xs leading-6 text-muted">Check with M-PESA before sending another payment if you received a debit confirmation. Pending payments are checked automatically; you can also check a delayed or failed result below.</p><button className="primary-button mt-5 gap-2" disabled={!latest.canCheck || checking || !config?.ready} onClick={() => void check(latest.id)}><RefreshCw size={15} />{checking ? 'Checking…' : 'Check payment status'}</button></>}</> : <p className="mt-4 text-sm leading-7 text-muted">Send a payment request to get started. The result will appear here after confirmation from M-PESA.</p>}</section>
     </div>
     <section className="panel mt-6"><div className="section-heading"><div><h2>Payment history</h2><p className="mt-1 text-xs text-muted">Your membership payment attempts and confirmed payments.</p></div></div>{payments.length ? <PaymentList payments={payments} /> : <p className="p-6 text-sm text-muted">{loading ? 'Loading…' : 'No payments yet.'}</p>}</section>
   </>;
