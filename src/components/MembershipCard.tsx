@@ -1,5 +1,4 @@
-import { ArrowUpRight, Download, ShieldCheck } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Download, ShieldCheck } from 'lucide-react';
 import type { Member, Membership } from '../types';
 import { formatDate } from '../services/memberService';
 import { StatusBadge } from './StatusBadge';
@@ -34,7 +33,6 @@ export function MembershipCard({ member, membership }: { member: Member; members
     </div>
     <div className="panel-footer"><span className="text-xs text-muted">Your connection to a stronger business community.</span><div className="flex items-center gap-3">
       {membership.status === 'active' && <button type="button" className="icon-button" title="Download membership certificate" aria-label="Download membership certificate" onClick={() => downloadCertificate(member, membership)}><Download size={18} /></button>}
-      <Link to="/dashboard/membership" className="text-link">Manage membership <ArrowUpRight size={15} /></Link>
     </div></div>
   </section>;
 }
