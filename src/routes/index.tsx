@@ -11,7 +11,7 @@ import { RegistrationPage } from '../pages/RegistrationPage';
 
 export const router = createBrowserRouter([
   { path: '/', element: <Navigate to="/dashboard" replace /> },
-  { path: '/dashboard', loader: async ({ request }) => {
+  { path: '/dashboard', hydrateFallbackElement: <main className="main-content"><p role="status">Loading your dashboard…</p></main>, loader: async ({ request }) => {
     let user;
     try { user = await authService.session(); } catch { user = null; }
     if (!user) { const url = new URL(request.url); return redirect(`/login?returnTo=${encodeURIComponent(url.pathname + url.search)}`); }

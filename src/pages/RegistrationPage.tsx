@@ -3,7 +3,6 @@ import type { FormEvent } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { Check, Clock3, FileCheck2, LoaderCircle, ShieldCheck, Upload } from 'lucide-react';
 import { memberService } from '../services/memberService';
-import { MembershipCategories } from '../components/MembershipCategories';
 import { membershipService } from '../services/membershipService';
 import type { KycRegistration, MembershipConfig } from '../types';
 
@@ -153,7 +152,6 @@ export function RegistrationPage() {
         <Field label="Select membership category *"><select className="kyc-input" name="packageId" value={selectedPackageId} onChange={event => setSelectedPackageId(event.target.value)} required><option value="" disabled>Select category</option>{config.packages.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></Field>
         <Field label="Membership fee"><output className="kyc-fee">{config.packages.find(item => item.id === selectedPackageId) ? formatKsh(config.packages.find(item => item.id === selectedPackageId)!.amount) : 'Select a package to see its fee'}</output></Field>
       </Section>
-      <MembershipCategories packages={config.packages} selectedId={selectedPackageId} onSelect={setSelectedPackageId} />
       <Section number="06" title="Declaration & consent">
         <label className="kyc-consent"><input type="checkbox" name="consent" required /><span>{declaration}</span></label>
       </Section>
